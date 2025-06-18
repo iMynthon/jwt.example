@@ -2,10 +2,9 @@ package mynthon.jwt.example.jwt.example.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import mynthon.jwt.example.jwt.example.security.jwt.JwtTokenService;
+import mynthon.jwt.example.jwt.example.service.JwtTokenService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.stereotype.Component;
 
 

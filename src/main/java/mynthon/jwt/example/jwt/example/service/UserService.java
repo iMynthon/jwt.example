@@ -7,6 +7,7 @@ import mynthon.jwt.example.jwt.example.exception.EntityNotFoundException;
 import mynthon.jwt.example.jwt.example.mapper.UserMapper;
 import mynthon.jwt.example.jwt.example.model.User;
 import mynthon.jwt.example.jwt.example.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder encoder;
 
     public List<UserResponse> findAll(){
         return userRepository.findAll().stream()
@@ -32,7 +34,10 @@ public class UserService {
 
     @Transactional
     public UserResponse save(UserRequest request){
-        return userMapper.entityToResponse(userRepository.save(userMapper.requestToEntity(request)));
+        User user = userMapper.requestToEntity(request);
+        user.setPassword(encoder.encode(request.password()));
+        return userMapper.entityToResponse(userRepository.save(user));
+
     }
 
     public UserResponse findUserById(UUID id){

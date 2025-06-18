@@ -1,7 +1,6 @@
 package mynthon.jwt.example.jwt.example.security;
 
 import lombok.RequiredArgsConstructor;
-import mynthon.jwt.example.jwt.example.repository.UserRepository;
 import mynthon.jwt.example.jwt.example.service.UserService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

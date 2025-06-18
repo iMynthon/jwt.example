@@ -1,26 +1,31 @@
 server:
-  port: 8080
-
+  port: 8088
 spring:
   application:
     name: jwt-example
+  output:
+    ansi:
+      enabled: ALWAYS
   data:
     redis:
       host: localhost
       port: 6379
   jpa:
     hibernate:
-      ddl-auto: 'create-drop'
+      ddl-auto: 'update'
   datasource:
     url: jdbc:postgresql://localhost:5432/secure_db
     username: postgres
     password: postgres
     hikari:
-      schema: jwt.example.schema
-      connection-init-sql: CREATE SCHEMA IF NOT EXISTS jwt.example.schema
+      schema: jwt_example_schema
+      connection-init-sql: CREATE SCHEMA IF NOT EXISTS jwt_example_schema
       connection-timeout: 5000
+#logging:
+#  level:
+#    org.springframework: DEBUG
 user-service:
   jwt:
-    secret: "dGhpcy1pcy1zZWNyZXQK" # В Base64
-    tokenExpiration: 1m
-    refreshExpiration: 10m
+    secret: PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PA==
+    tokenExpiration: 30m
+    refreshTokenExpiration: 30m

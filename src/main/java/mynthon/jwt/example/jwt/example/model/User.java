@@ -4,13 +4,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.data.annotation.Id;
-import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Getter @Service
+@Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Entity(name = "users")
 public class User {
@@ -18,13 +17,17 @@ public class User {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     private UUID id;
+
     @Column(nullable = false)
     private String username;
+
     @Column(unique = true,nullable = false)
     private String email;
+
     @Column(unique = true,nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     private Set<RoleType> roles;
 
 }

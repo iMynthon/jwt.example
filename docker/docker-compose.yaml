@@ -12,4 +12,4 @@ services:
     environment:
       - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=search-engine
+      - POSTGRES_DB=secure_db

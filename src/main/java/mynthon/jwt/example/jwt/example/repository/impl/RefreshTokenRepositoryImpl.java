@@ -1,11 +1,10 @@
 package mynthon.jwt.example.jwt.example.repository.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import mynthon.jwt.example.jwt.example.exception.RefreshTokenException;
 import mynthon.jwt.example.jwt.example.model.jwt.RefreshToken;
 import mynthon.jwt.example.jwt.example.repository.RefreshTokenRepository;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Repository;
 
 import java.security.SecureRandom;
@@ -14,56 +13,67 @@ import java.util.Base64;
 import java.util.UUID;
 
 @Repository
+@Slf4j
 public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
 
-    private static final String REFRESH_TOKEN_INDEX = "refreshTokenIndex";
+    private static final String TOKEN_STORE_PREFIX = "token:";
+    private static final String TOKEN_INDEX_KEY = "token_index";
 
-    private final ValueOperations<String, RefreshToken> operationsForValue;
-    private final HashOperations<String,String,String> operationsForHash;
+    private final ValueOperations<String, RefreshToken> valueOperations;
+    private final HashOperations<String, String, String> hashOperations;
+    private final RedisTemplate<String, RefreshToken> redisTemplate;
 
-    public RefreshTokenRepositoryImpl(RedisTemplate<String,RefreshToken> refreshTokenRedisTemplate){
-        this.operationsForValue = refreshTokenRedisTemplate.opsForValue();
-        operationsForHash = refreshTokenRedisTemplate.opsForHash();
+    public RefreshTokenRepositoryImpl(RedisTemplate<String, RefreshToken> redisTemplate) {
+        this.valueOperations = redisTemplate.opsForValue();
+        this.hashOperations = redisTemplate.opsForHash();
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
     public RefreshToken save(RefreshToken refreshToken, Duration duration) {
-        operationsForValue.set(REFRESH_TOKEN_INDEX,refreshToken);
-        operationsForHash.put(REFRESH_TOKEN_INDEX,refreshToken.getValue(),refreshToken.getId());
-        return operationsForValue.get(refreshToken.getId());
+        try {
+            String tokenKey = TOKEN_STORE_PREFIX + refreshToken.getId();
+            valueOperations.set(tokenKey, refreshToken, duration);
+            hashOperations.put(TOKEN_INDEX_KEY, refreshToken.getValue(), refreshToken.getId());
+            redisTemplate.expire(TOKEN_INDEX_KEY, duration);
+            return refreshToken;
+        } catch (Exception e) {
+            log.error("Failed to save refresh token", e);
+            throw new RefreshTokenException(String.format("Failed to save refresh token - %s", e.getMessage()));
+        }
     }
 
     @Override
-    public RefreshToken getByValue(String refreshToken) {
-        // 1. Поиск ID токена
-        String tokenId = operationsForHash.get(REFRESH_TOKEN_INDEX, refreshToken);
+    public RefreshToken getByValue(String tokenValue) {
+        String tokenId = hashOperations.get(TOKEN_INDEX_KEY, tokenValue);
         if (tokenId == null) {
-            throw new RefreshTokenException("Не найден");
+            throw new RefreshTokenException("Токен не найден");
         }
-        // 2. Получение старого токена
-        RefreshToken oldToken = operationsForValue.get(tokenId);
-        if (oldToken == null) {
-            throw new RefreshTokenException("Данные не найдены");
+        String tokenKey = TOKEN_STORE_PREFIX + tokenId;
+        RefreshToken existingToken = valueOperations.get(tokenKey);
+        if (existingToken == null) {
+            hashOperations.delete(TOKEN_INDEX_KEY, tokenValue);
+            throw new RefreshTokenException("Токен устарел или удалён");
         }
-        // 3. Удаление старого токена
-        operationsForHash.delete(REFRESH_TOKEN_INDEX, tokenId); // Удаляем по ID, а надо по значению
-        operationsForValue.getOperations().delete(tokenId);
-        // 4. Генерация и сохранение нового
-        RefreshToken newToken = generateNewToken(oldToken.getUserId());
-        save(newToken, Duration.ofMinutes(30));
+        RefreshToken newToken = generateNewToken(existingToken.getUserId());
+        redisTemplate.delete(tokenKey);
+        hashOperations.delete(TOKEN_INDEX_KEY, tokenValue);
+        valueOperations.set(TOKEN_STORE_PREFIX + newToken.getId(), newToken,
+                Duration.ofMinutes(30));
+        hashOperations.put(TOKEN_INDEX_KEY, newToken.getValue(), newToken.getId());
         return newToken;
     }
 
     private RefreshToken generateNewToken(String userId) {
         return RefreshToken.builder()
                 .id(UUID.randomUUID().toString())
-                .value(generateSecureToken()) // Например, SecureRandom
+                .value(generateSecureToken())
                 .userId(userId)
                 .build();
     }
 
     private String generateSecureToken() {
-        byte[] bytes = new byte[36]; // 288 бит
+        byte[] bytes = new byte[36];
         new SecureRandom().nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }

@@ -1,4 +1,4 @@
-package mynthon.jwt.example.jwt.example.security;
+package mynthon.jwt.example.jwt.example.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,9 +6,6 @@ import mynthon.jwt.example.jwt.example.exception.CheckPasswordException;
 import mynthon.jwt.example.jwt.example.model.User;
 import mynthon.jwt.example.jwt.example.model.jwt.RefreshToken;
 import mynthon.jwt.example.jwt.example.model.jwt.TokenData;
-import mynthon.jwt.example.jwt.example.security.jwt.JwtTokenService;
-import mynthon.jwt.example.jwt.example.service.JwtRefreshTokenService;
-import mynthon.jwt.example.jwt.example.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +41,7 @@ public class SecurityService {
 
     private TokenData createTokenData(User user) {
         String token = jwtTokenService.generateToken(
-                user.getUsername(),
+                user.getEmail(),
                 String.valueOf(user.getId()),
                 user.getRoles().stream().map(Enum::toString).toList());
         RefreshToken refreshToken = jwtRefreshTokenService.save(String.valueOf(user.getId()));

@@ -1,6 +1,7 @@
-package mynthon.jwt.example.jwt.example.security.jwt;
+package mynthon.jwt.example.jwt.example.service;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +14,11 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
@@ -26,16 +29,15 @@ public class JwtTokenService {
 
     private static final String ROLES_CLAIM = "roles";
     private static final String ID_CLAIM = "id";
-    private static final SignatureAlgorithm SIGNATURE_ALGORITHM = SignatureAlgorithm.HS512;
 
     @Value("${user-service.jwt.secret}")
     private String jwtSecret;
-
     @Value("${user-service.jwt.tokenExpiration}")
     private Duration tokenExpiration;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        byte[] keyBytes = Base64.getDecoder().decode(jwtSecret.trim());
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length, "HmacSHA512");
     }
 
     public String generateToken(String email, String id, List<String> roles) {
@@ -44,18 +46,19 @@ public class JwtTokenService {
                 .setExpiration(Date.from(Instant.now().plus(tokenExpiration)))
                 .claim(ROLES_CLAIM, roles)
                 .claim(ID_CLAIM, id)
-                .signWith(getSigningKey(), SIGNATURE_ALGORITHM)
+                .signWith(getSigningKey())
                 .compact();
     }
-
+    @SuppressWarnings("unchecked")
     public Authentication toAuthentication(String token) {
         Claims claims = parseTokenClaims(token);
         String email = claims.getSubject();
         String id = claims.get(ID_CLAIM, String.class);
         List<String> roles = claims.get(ROLES_CLAIM, List.class);
         validateClaims(email, id, roles);
+        AppUserPrincipal principal = new AppUserPrincipal(email,id,roles);
         return new UsernamePasswordAuthenticationToken(
-                new AppUserPrincipal(email, id, roles),
+                principal,
                 null,
                 roles.stream().map(SimpleGrantedAuthority::new).toList()
         );
@@ -76,10 +79,10 @@ public class JwtTokenService {
 
         return false;
     }
+
     private Claims parseTokenClaims(String token) throws JwtException {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
-                .require(SIGNATURE_ALGORITHM.getValue(), true)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
