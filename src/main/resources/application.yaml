@@ -21,9 +21,9 @@ spring:
       schema: jwt_example_schema
       connection-init-sql: CREATE SCHEMA IF NOT EXISTS jwt_example_schema
       connection-timeout: 5000
-#logging:
-#  level:
-#    org.springframework: DEBUG
+logging:
+  pattern:
+    console: '%clr(%d{HH:mm:ss}){faint} %clr(%-5level) %clr([%logger{0}]){cyan} %clr(:){faint} %m%n'
 user-service:
   jwt:
     secret: PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PA==
