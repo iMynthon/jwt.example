@@ -1,6 +1,7 @@
 package mynthon.jwt.example.web.controller;
 
 import lombok.RequiredArgsConstructor;
+import mynthon.jwt.example.aop.service.LoggableController;
 import mynthon.jwt.example.security.AppUserPrincipal;
 import mynthon.jwt.example.service.UserService;
 import mynthon.jwt.example.web.dto.request.UserRequest;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/user")
+@LoggableController
 public class UserController {
 
     private final UserService userService;
@@ -38,7 +40,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/registered")
     public UserResponse save(@RequestBody UserRequest request){
-        return userService.save(request);
+        return userService.saveEntity(request);
     }
 
     @ResponseStatus(HttpStatus.OK)

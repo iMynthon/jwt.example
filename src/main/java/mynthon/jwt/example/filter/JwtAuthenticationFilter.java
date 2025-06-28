@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
 
@@ -26,8 +27,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        ContentCachingRequestWrapper wrapper = new ContentCachingRequestWrapper(request);
         try {
-            Authentication authentication = jwtAuthConverter.convert(request);
+            Authentication authentication = jwtAuthConverter.convert(wrapper);
             if (authentication != null) {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
@@ -36,6 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
             return;
         }
-        filterChain.doFilter(request, response);
+        filterChain.doFilter(wrapper, response);
     }
 }

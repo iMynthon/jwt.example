@@ -3,6 +3,7 @@ package mynthon.jwt.example.service;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mynthon.jwt.example.aop.service.Loggable;
 import mynthon.jwt.example.exception.TokenParseException;
 import mynthon.jwt.example.security.AppUserPrincipal;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Loggable
 public class JwtTokenService {
 
     private static final String ROLES_CLAIM = "roles";

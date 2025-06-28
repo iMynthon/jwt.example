@@ -18,6 +18,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -59,13 +60,12 @@ public class SecureConfig {
                 }).authenticationEntryPoint((request, response, authException) -> {
                     createResponse(response,"Ошибка аутентификации - ",authException);
                 })).csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(HttpBasicConfigurer<HttpSecurity>::disable)
                 .sessionManagement(httpSecuritySessionManagementConfigurer ->
                         httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authenticationManager(authenticationManager)
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class);
-
         return security.build();
     }
 

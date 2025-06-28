@@ -2,6 +2,7 @@ package mynthon.jwt.example.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mynthon.jwt.example.aop.service.Loggable;
 import mynthon.jwt.example.exception.DuplicateEmailException;
 import mynthon.jwt.example.exception.EntityNotFoundException;
 import mynthon.jwt.example.mapper.UserMapper;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Loggable
 public class UserService {
 
     private final UserRepository userRepository;
@@ -36,7 +38,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse save(UserRequest request){
+    public UserResponse saveEntity(UserRequest request){
         checkEmailDuplicate(request.email());
         User user = userMapper.requestToEntity(request);
         user.setPassword(encoder.encode(request.password()));

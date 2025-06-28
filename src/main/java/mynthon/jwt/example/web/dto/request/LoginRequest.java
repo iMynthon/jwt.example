@@ -1,6 +1,6 @@
 package mynthon.jwt.example.web.dto.request;
 
-public record LogoutRequest(
+public record LoginRequest(
         String email,
         String password
 ) {
